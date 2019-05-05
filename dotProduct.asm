@@ -43,117 +43,115 @@ nl: .asciiz "\n"
 	
 .text
 main: 
-	la $s0, rm  # Reg s0 gets rm matrix
-	la $s1, cm  # Reg s1 gets cm matrix
-	la $s2, dm  # Reg s2 gets dm matrix
+    la $s0, rm                       # Reg s0 gets rm matrix
+    la $s1, cm                       # Reg s1 gets cm matrix
+    la $s2, dm                       # Reg s2 gets dm matrix
 	
-	lw $s3, sz  # C: Reg s3 gets column size
-	lw $s4, dz  # D: Reg s4 gets data size (__4__)
+    lw $s3, sz                       # C: Reg s3 gets column size
+    lw $s4, dz                       # D: Reg s4 gets data size (__4__)
 	
-	li $t0, 0  # X: Multiplier Rows
-	li $t1, 0  # Y: Multiplicand Coulums
-	li $t2, 0  # Z: Multiplicand Rows
+    li $t0, 0                        # X: Multiplier Rows
+    li $t1, 0                        # Y: Multiplicand Coulums
+    li $t2, 0                        # Z: Multiplicand Rows
 	
     rLoop:
-    	bge $t0, $s3, END  # for(r = 0; r < rmRows)
-    	addi $t0, $t0, 1   # r++
-    	li $t1, 0          # Reset cmColumns
+        bge $t0, $s3, END            # for(r = 0; r < rmRows)
+    	addi $t0, $t0, 1             # r++
+    	li $t1, 0                    # Reset cmColumns
 		
-		j cLoop            # Nested Loop
+	j cLoop                      # Nested Loop
     
     cLoop:
-    	bge $t1, $s3, rLoop # for(c = 0; c < cmColumns)
-    	addi $t1, $t1, 1    # c++
-    	li $t2, 0           # Reset cmRows
+    	bge $t1, $s3, rLoop          # for(c = 0; c < cmColumns)
+    	addi $t1, $t1, 1             # c++
+    	li $t2, 0                    # Reset cmRows
     	
-    	j r2Loop 			# Nested Loop
+    	j r2Loop                     # Nested Loop
     	
     r2Loop:
-    	bge $t2, $s3, cLoop # for(r2 = 0; r2 < cmRows)
-    	addi $t0, $t0, -1    # X: Cancel iterator interference of calculation
-    	addi $t1, $t1, -1    # Y: Cancel iterator interference of calculation
+    	bge $t2, $s3, cLoop          # for(r2 = 0; r2 < cmRows)
+    	addi $t0, $t0, -1            # X: Cancel iterator interference of calculation
+    	addi $t1, $t1, -1            # Y: Cancel iterator interference of calculation
     	
     	# Get address for dm[X][Y]
-    	addi $a0, $t0, 0    # rowMajor(X, 
-    	addi $a1, $t1, 0   	#             Y, 
-    	addi $a2, $s2, 0    #                baseAddr)
-    	jal rowMajor		# Calucate new address
-    	lw $t7, ($s5)       # Reg t7 get dm value
-    	la $t4, ($s5)       # Reg t4 gets dm address 
+    	addi $a0, $t0, 0             # rowMajor(X, 
+    	addi $a1, $t1, 0             #             Y, 
+    	addi $a2, $s2, 0             #                baseAddr)
+    	jal rowMajor	             # Calucate new address
+    	lw $t7, ($s5)                # Reg t7 get dm value
+    	la $t4, ($s5)                # Reg t4 gets dm address 
     	
     	# Get value for rm[X][Z]
-    	addi $a0, $t0, 0    # rowMajor(X, 
-    	addi $a1, $t2, 0    #            Z,
-    	addi $a2, $s0, 0    #               baseAddr)
-    	jal rowMajor		# Calucate new address
-    	lw $t5, ($s5)       # Reg t5 gets rm[X][Z] 
+    	addi $a0, $t0, 0             # rowMajor(X, 
+    	addi $a1, $t2, 0             #            Z,
+    	addi $a2, $s0, 0             #               baseAddr)
+    	jal rowMajor	             # Calucate new address
+    	lw $t5, ($s5)                # Reg t5 gets rm[X][Z] 
     	
     	# Get value for cm[Z][Y]
-    	addi $a0, $t2, 0    # rowMajor(Z,
-    	addi $a1, $t1, 0 	#            Y,
-    	addi $a2, $s1, 0    #               baseAddr)
-    	jal rowMajor		# Calucate new address
-    	lw $t6, ($s5)       # Reg t6 gets cm[Z][Y]
+    	addi $a0, $t2, 0             # rowMajor(Z,
+    	addi $a1, $t1, 0             #            Y,
+    	addi $a2, $s1, 0             #               baseAddr)
+    	jal rowMajor	             # Calucate new address
+    	lw $t6, ($s5)                # Reg t6 gets cm[Z][Y]
     	
-    	mul $t5, $t5, $t6   # t5 = rm[X][Z] * cm[Z][Y]
-    	add $t7, $t7, $t5   # dm[X][Z] += t5
-    	sw $t7, 0($t4)      # Store in dm[X][Z]
+    	mul $t5, $t5, $t6            # t5 = rm[X][Z] * cm[Z][Y]
+    	add $t7, $t7, $t5            # dm[X][Z] += t5
+    	sw $t7, 0($t4)               # Store in dm[X][Z]
     	
-    	addi $t0, $t0, 1	# X: Redo iterator interference of caluculation
-    	addi $t1, $t1, 1	# Y: Redo iterator interference of caluculation
-    	addi $t2, $t2, 1 	# Z: Redo iterator interference of caluculation
+    	addi $t0, $t0, 1             # X: Redo iterator interference of caluculation
+    	addi $t1, $t1, 1             # Y: Redo iterator interference of caluculation
+    	addi $t2, $t2, 1             # Z: Redo iterator interference of caluculation
     	
-    	j r2Loop            # Loop
+    	j r2Loop                     # Loop
 	
-	rowMajor: # rowMajor(a0, a1)
-    	mul $s5, $a0, $s3  # ((X * S
-    	add $s5, $s5, $a1  #   	     + Y)
-    	mul $s5, $s5, $s4  #             * D))
-    	add $s5, $s5, $a2  #                  + baseAddr
+	rowMajor:                    # rowMajor(a0, a1)
+    	mul $s5, $a0, $s3            # ((X * S
+    	add $s5, $s5, $a1            #        + Y)
+    	mul $s5, $s5, $s4            #             * D))
+    	add $s5, $s5, $a2            #                   + baseAddr
     	
     	jr $ra
-
-	
-		
-									
-	END:
-		li $t0, 0          # Loop X
-		li $t1, 0		   # Loop Y
+							
+    END:
+        li $t0, 0                    # X = 0
+	li $t1, 0                    # Y = 0
 		
 	xLoop:
-		beq $s7, $s3, EXIT
-		addi $s7, $s7, 1   # X++ 
-		li $s6, 0          # Reset Y iterator
+	    beq $s7, $s3, EXIT       # for(x=0; x<columnSize)
+	    addi $s7, $s7, 1         # X++ 
+	    li $s6, 0                # Reset Y iterator
 		
-		la $a0, nl         # Print New Line
-		li $v0, 4
-		syscall
+	    la $a0, nl               # Print New Line
+	    li $v0, 4                # System call to print ascii
+	    syscall
 		
-		j yLoop
+	    j yLoop                  # Nested Loop
 		
 	yLoop:
-		beq $s6, $s3, xLoop
-		addi $s7, $s7, -1    #Cancel X iterator interference of calculation
+	    beq $s6, $s3, xLoop	     # for(y=0; y<columnSize)
+	    addi $s7, $s7, -1        # Cancel X iterator interference of calculation
 		
-		addi $a0, $s7, 0    # rowMajor(X, 
-    	addi $a1, $s6, 0   	#             Y, 
-    	addi $a2, $s2, 0    #                baseAddr)
-    	jal rowMajor
-    	lw $a0, ($s5)       # Reg t7 get dm value
-    	li $v0, 1			# Print Value
-    	syscall
+	    addi $a0, $s7, 0         # rowMajor(X, 
+	    addi $a1, $s6, 0   	     #             Y, 
+	    addi $a2, $s2, 0         #                baseAddr)
+	    jal rowMajor             # Generate Addess with parameters(a0, a1, a2)
+	    
+	    lw $a0, ($s5)            # Reg t7 get dm value
+	    li $v0, 1		     # Print Value
+	    syscall
+
+	    la $a0, sp      	     # Print Space
+	    li $v0, 4                # System call for ascii print
+	    syscall
     	
-    	la $a0, sp      	# Print Space
-		li $v0, 4
-		syscall
+    	    addi $s7, $s7, 1	     # Restore X iterator
+    	    addi $s6, $s6, 1         # Y++
     	
-    	addi $s7, $s7, 1	# Restore iterator
-    	addi $s6, $s6, 1    # Y++
-    	
-    	j yLoop
+    	    j yLoop		     # Loop
     	
 		
 		
 	EXIT:
-		li $v0, 10
-		syscall	
+	    li $v0, 10	             #System Call to End Program
+	    syscall	
