@@ -35,70 +35,74 @@ discription: .asciiz "This application will calculate the dot square \nof a 10 x
 	
 .text
 main:
-    la $s0, rm                       # Reg s0 gets matrix
-    la $s1, dm                       # Reg s1 gets answer matrix
+    la $s0, rm                           # Reg s0 gets matrix
+    la $s1, dm                           # Reg s1 gets answer matrix
 	
-    lw $s3, sz                       # C: Reg s3 gets matrix size
-    lw $s4, dz                       # D: Reg s4 gets data size (__4__bytes)
+    lw $s3, sz                           # C: Reg s3 gets matrix size
+    lw $s4, dz                           # D: Reg s4 gets data size (__4__bytes)
 	
-    li $t0, 0                        # X: Rows Iterator
-    li $t1, 0                        # Y: Coulums Iterator
-    li $t2, 0                        # Z: Recursive Addition Iterator
+    li $t0, 0                            # X: Rows Iterator
+    li $t1, 0                            # Y: Coulums Iterator
+    li $t2, 0                            # Z: Recursive Addition Iterator
 	
-	# First Nested Loop
-	# Calcuates Dot Square and places it in s2
+    # First Nested Loop
+    # Calcuates Dot Square and places it in s2
+    # for(r = 0; r < MatrixRows)
     rLoop:
-        bge $t0, $s3, END            # for(r = 0; r < rmRows)
-    	addi $t0, $t0, 1             # r++
-    	li $t1, 0                    # Reset cmColumns
+        bge $t0, $s3, END                # for(r = 0; r < rmRows)
+    	addi $t0, $t0, 1                 # r++
+    	li $t1, 0                        # Reset cmColumns
 		
-        j cLoop                      # Nested Loop
+        j cLoop                          # Nested Loop
     
-    cLoop:
-    	bge $t1, $s3, rLoop          # for(c = 0; c < cmColumns)
-    	addi $t1, $t1, 1             # c++
-    	li $t2, 0                    # Reset cmRows
+    # Second Nested Loop
+    # for(c = 0; c < MatrixRows)
+    cLoop: 
+    	bge $t1, $s3, rLoop              # for(c = 0; c < cmColumns)
+    	addi $t1, $t1, 1                 # c++
+    	li $t2, 0                        # Reset cmRows
     	
-    	j r2Loop                     # Nested Loop
+    	j r2Loop                         # Nested Loop
     
+    # Final Nested Loop
     # for(r2 = 0; r2 < MatrixRows)	
     r2Loop:                          
-    	bge $t2, $s3, cLoop          # Branch if iterator >= Column Size
-    	addi $t0, $t0, -1            # X: Cancel iterator interference of calculation
-    	addi $t1, $t1, -1            # Y: Cancel iterator interference of calculation
+    	bge $t2, $s3, cLoop              # Branch if iterator >= Column Size
+    	addi $t0, $t0, -1                # X: Cancel iterator interference of calculation
+    	addi $t1, $t1, -1                # Y: Cancel iterator interference of calculation
     	
     	# Get address for dm[X][Y]
-    	la $a0, ($t0)                # rowMajor(X, 
-    	la $a1, ($t1)                #             Y, 
-    	la $a2, ($s1)                #                dm-baseAddr) 
-    	jal rowMajor	             # Calucate new address
-    	lw $t7, ($s5)                # Reg t7 get dm value
-    	la $t4, ($s5)                # Reg t4 gets dm address 
+    	la $a0, ($t0)                    # rowMajor(X, 
+    	la $a1, ($t1)                    #             Y, 
+    	la $a2, ($s1)                    #                dm-baseAddr) 
+    	jal rowMajor	                 # Calucate new address
+    	lw $t7, ($s5)                    # Reg t7 get dm value
+    	la $t4, ($s5)                    # Reg t4 gets dm address 
     	
     	# Get value for matrix[X][Z]
-    	la $a0, ($t0)                # rowMajor(X, 
-    	la $a1, ($t2)                #            Z,
-    	la $a2, ($s0)                #               matrix-baseAddr)
-    	jal rowMajor	             # Calucate new address
-    	lw $t5, ($s5)                # Reg t5 gets matrix[X][Z] integer
+    	la $a0, ($t0)                    # rowMajor(X, 
+    	la $a1, ($t2)                    #            Z,
+    	la $a2, ($s0)                    #               matrix-baseAddr)
+    	jal rowMajor	                 # Calucate new address
+    	lw $t5, ($s5)                    # Reg t5 gets matrix[X][Z] integer
     	
     	# Get value for matrix[Z][Y]
-    	la $a0, ($t2)                # rowMajor(Z,
-    	la $a1, ($t1)                #            Y,
-    	la $a2, ($s0)                #               matrix-baseAddr)
-    	jal rowMajor	             # Calucate new address
-    	lw $t6, ($s5)                # Reg t6 gets matrix[Z][Y] integer
-    	
+    	la $a0, ($t2)                    # rowMajor(Z,
+    	la $a1, ($t1)                    #            Y,
+    	la $a2, ($s0)                    #               matrix-baseAddr)
+    	jal rowMajor	                 # Calucate new address
+    	lw $t6, ($s5)                    # Reg t6 gets matrix[Z][Y] integer
+    	 
     	# Perform iterative dot product solution
-    	mulu $t5, $t5, $t6           # t5 = matrix[X][Z] * matrix[Z][Y]
-    	addu $t7, $t7, $t5           # dm[X][Z] += t5
-    	sw $t7, ($t4)                # Store in dm[X][Z]
+    	mulu $t5, $t5, $t6               # t5 = matrix[X][Z] * matrix[Z][Y]
+    	addu $t7, $t7, $t5               # dm[X][Z] += t5
+    	sw $t7, ($t4)                    # Store in dm[X][Z]
     	
     	# Restore Iterators
-    	addi $t0, $t0, 1             # X: Redo iterator that led to interference of caluculation
-    	addi $t1, $t1, 1             # Y: Redo iterator that led to interference of caluculation
-    	addi $t2, $t2, 1             # Z: Redo iterator that led to interference of caluculation
-    	j r2Loop                     # Loop
+    	addi $t0, $t0, 1                 # X: Redo iteration that led to interference of caluculation
+    	addi $t1, $t1, 1                 # Y: Redo iteration that led to interference of caluculation
+    	addi $t2, $t2, 1                 # Z: Redo iteration that led to interference of caluculation
+    	j r2Loop                         # Loop
 	
 	# Address Generation with Row Major Order 
 	# returns the address of a2[a0][a1]
@@ -109,14 +113,14 @@ main:
 	# f(a0, a1, a2) = a2 + (D(a0 * C + a1))
 	# s5 is our return register
 	rowMajor:                        # rowMajor(a0, a1, a2)
-    	mul $s5, $a0, $s3            # ((X * C
-    	add $s5, $s5, $a1            #        + Y)
-    	mul $s5, $s5, $s4            #            * D))
-    	add $s5, $s5, $a2            #                 + baseAddr  	
-    	jr $ra                       # Return to link
+    	mul $s5, $a0, $s3                # ((X * C
+    	add $s5, $s5, $a1                #        + Y)
+    	mul $s5, $s5, $s4                #            * D))
+    	add $s5, $s5, $a2                #                 + baseAddr  	
+    	jr $ra                           # Return to link
 							
     END:
-        li $s7, 0                    # X = 0
+        li $s7, 0                        # X = 0
 		
 	xLoop:
 	    beq $s7, $s3, EXIT           # for(x=0; x<columnSize)
@@ -139,17 +143,17 @@ main:
 	    jal rowMajor                 # Generate Addess with parameters(a0, a1, a2)
 	    
 	    lw $a0, ($s5)                # Reg t7 get dm value
-	    li $v0, 36		             # System Call Prints Unsigned Integer
+	    li $v0, 36		         # System Call Prints Unsigned Integer
 	    syscall
 
 	    la $a0, sp      	         # Print Space
 	    li $v0, 4                    # System call for ascii print
 	    syscall
     	
-        addi $s7, $s7, 1	         # Restore X iterator
-        addi $s6, $s6, 1             # Y++
+            addi $s7, $s7, 1	         # Restore X iterator
+            addi $s6, $s6, 1             # Y++
     	
-        j yLoop		                 # Loop
+            j yLoop		         # Loop
     	
 	EXIT:
 	    li $v0, 10	                 #System Call to End Program
