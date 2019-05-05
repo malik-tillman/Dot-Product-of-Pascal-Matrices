@@ -1,6 +1,11 @@
-# An algorithm that multiplies two 10 x 10 symetrical pascal matrices 
-# By: Malik Tillman and Austin Cho
+# An algorithm that finds the dot square of a 10 x 10 symetrical pascal matrices using MIPS32 assembly language.
+# May 5th, 2019
+# By: Malik Tillman
+# Collaborator: Austin Cho
+
 .data
+# Our symetrical pascal matrix generated in python
+# Todo: See generatePascal.py
 rm: .word 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
     .word 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     .word 1, 3, 6, 10, 15, 21, 28, 36, 45, 55
@@ -22,19 +27,37 @@ dm: .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-                      
+                                      
+# Our matrix size, f(sz) = sz x sz. EX. f(2) = 2 by 2 matrix size                      
 sz:  .word 10
 
+# Data size
 dz:  .word 4
 
-sp: .asciiz " "
+# Favorite asciizs
+sp: .asciiz "  "
 nl: .asciiz "\n"
 
-title: .asciiz "Welcome to the Matrix Multipier"
-discription: .asciiz "This application will calculate the dot square \nof a 10 x 10 Symmetric Pascal Matrix"
+# Metadata
+title: .asciiz "Welcome to the Dot Square Calculator\n"
+ul: .asciiz "------------------------------------\n"
+description: .asciiz "This application will calculate the dot square \nof a 10 x 10 Symmetric Pascal Matrix.\n"
 	
 .text
 main:
+	# Print Title
+    la $a0, title                        # Fetch title data
+    li $v0, 4                            # Print Title
+    syscall
+    la $a0, ul                           # Fetch underline data
+    li $v0, 4                            # Print Underline
+    syscall
+    	
+    # Print Description
+    la $a0, description                  # Fetch description data
+    li $v0, 4                            # Print Description
+    syscall
+    	 
     la $s0, rm                           # Reg s0 gets matrix
     la $s1, dm                           # Reg s1 gets answer matrix
 	
@@ -94,8 +117,8 @@ main:
     	lw $t6, ($s5)                    # Reg t6 gets matrix[Z][Y] integer
     	 
     	# Perform iterative dot product solution
-    	mulu $t5, $t5, $t6               # t5 = matrix[X][Z] * matrix[Z][Y]
-    	addu $t7, $t7, $t5               # dm[X][Z] += t5
+    	mul $t5, $t5, $t6               # t5 = matrix[X][Z] * matrix[Z][Y]
+    	add $t7, $t7, $t5               # dm[X][Z] += t5
     	sw $t7, ($t4)                    # Store in dm[X][Z]
     	
     	# Restore Iterators
@@ -112,13 +135,13 @@ main:
 	# Let D = Data Size in Bytes and C = Array's Column Size 
 	# f(a0, a1, a2) = a2 + (D(a0 * C + a1))
 	# s5 is our return register
-	rowMajor:                        # rowMajor(a0, a1, a2)
+	rowMajor:                            # rowMajor(a0, a1, a2)
     	mul $s5, $a0, $s3                # ((X * C
     	add $s5, $s5, $a1                #        + Y)
     	mul $s5, $s5, $s4                #            * D))
     	add $s5, $s5, $a2                #                 + baseAddr  	
     	jr $ra                           # Return to link
-							
+													
     END:
         li $s7, 0                        # X = 0
 		
@@ -143,18 +166,18 @@ main:
 	    jal rowMajor                 # Generate Addess with parameters(a0, a1, a2)
 	    
 	    lw $a0, ($s5)                # Reg t7 get dm value
-	    li $v0, 36		         # System Call Prints Unsigned Integer
+	    li $v0, 1		             # System Call Prints String
 	    syscall
 
 	    la $a0, sp      	         # Print Space
 	    li $v0, 4                    # System call for ascii print
 	    syscall
     	
-            addi $s7, $s7, 1	         # Restore X iterator
-            addi $s6, $s6, 1             # Y++
+        addi $s7, $s7, 1	         # Restore X iterator
+        addi $s6, $s6, 1             # Y++
     	
-            j yLoop		         # Loop
-    	
-	EXIT:
+        j yLoop		         # Loop
+        									    												   									    											 							
+	EXIT:	
 	    li $v0, 10	                 #System Call to End Program
 	    syscall	
