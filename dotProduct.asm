@@ -1,4 +1,4 @@
-# An algorithm that finds the dot square of a 10 x 10 symetrical pascal matrices using MIPS32 assembly language.
+# An algorithm that finds the dot square of a 10 x 10 symetrical pascal matrix using MIPS32 assembly language.
 # May 5th, 2019
 # By: Malik Tillman
 # Collaborator: Austin Cho
@@ -16,7 +16,8 @@ rm: .word 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
     .word 1, 8, 36, 120, 330, 792, 1716, 3432, 6435, 11440
     .word 1, 9, 45, 165, 495, 1287, 3003, 6435, 12870, 24310
     .word 1, 10, 55, 220, 715, 2002, 5005, 11440, 24310, 48620
-   
+
+# A blank matrix used to store the dot square of 'rm'
 dm: .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -28,13 +29,13 @@ dm: .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
                                       
-# Our matrix size, f(sz) = sz x sz. EX. f(2) = 2 by 2 matrix size                      
+# Our matrix size, f(sz) = sz x sz. EX. f(2) = 2 by 2 matrix size. 10 for a 10 x 10 matrix                      
 sz:  .word 10
 
 # Data size
 dz:  .word 4
 
-# Favorite asciizs
+# Frequent used asciis
 sp: .asciiz "  "
 nl: .asciiz "\n"
 
@@ -45,7 +46,7 @@ description: .asciiz "This application will calculate the dot square \nof a 10 x
 	
 .text
 main:
-	# Print Title
+    # Print Title
     la $a0, title                        # Fetch title data
     li $v0, 4                            # Print Title
     syscall
@@ -57,16 +58,16 @@ main:
     la $a0, description                  # Fetch description data
     li $v0, 4                            # Print Description
     syscall
-    	 
+    
+    # Load variables from memory 	 
     la $s0, rm                           # Reg s0 gets matrix
     la $s1, dm                           # Reg s1 gets answer matrix
 	
     lw $s3, sz                           # C: Reg s3 gets matrix size
     lw $s4, dz                           # D: Reg s4 gets data size (__4__bytes)
-	
-    li $t0, 0                            # X: Rows Iterator
-    li $t1, 0                            # Y: Coulums Iterator
-    li $t2, 0                            # Z: Recursive Addition Iterator
+
+    # Initiate condition loop variable
+    li $t0, 0                            # X: Rows iterator
 	
     # First Nested Loop
     # Calcuates Dot Square and places it in s2
@@ -74,7 +75,7 @@ main:
     rLoop:
         bge $t0, $s3, END                # for(r = 0; r < rmRows)
     	addi $t0, $t0, 1                 # r++
-    	li $t1, 0                        # Reset cmColumns
+    	li $t1, 0                        # Y: Columns iterator
 		
         j cLoop                          # Nested Loop
     
@@ -83,7 +84,7 @@ main:
     cLoop: 
     	bge $t1, $s3, rLoop              # for(c = 0; c < cmColumns)
     	addi $t1, $t1, 1                 # c++
-    	li $t2, 0                        # Reset cmRows
+    	li $t2, 0                        # Z: Column iterative addition iterator
     	
     	j r2Loop                         # Nested Loop
     
@@ -117,8 +118,8 @@ main:
     	lw $t6, ($s5)                    # Reg t6 gets matrix[Z][Y] integer
     	 
     	# Perform iterative dot product solution
-    	mul $t5, $t5, $t6               # t5 = matrix[X][Z] * matrix[Z][Y]
-    	add $t7, $t7, $t5               # dm[X][Z] += t5
+    	mul $t5, $t5, $t6                # t5 = matrix[X][Z] * matrix[Z][Y]
+    	add $t7, $t7, $t5                # dm[X][Z] += t5
     	sw $t7, ($t4)                    # Store in dm[X][Z]
     	
     	# Restore Iterators
@@ -127,7 +128,7 @@ main:
     	addi $t2, $t2, 1                 # Z: Redo iteration that led to interference of caluculation
     	j r2Loop                         # Loop
 	
-	# Address Generation with Row Major Order 
+	# Address Generation with Row Major Order Procedure 
 	# returns the address of a2[a0][a1]
 	# a0 : Row Index 
 	# a1 : Column Index
@@ -135,7 +136,7 @@ main:
 	# Let D = Data Size in Bytes and C = Array's Column Size 
 	# f(a0, a1, a2) = a2 + (D(a0 * C + a1))
 	# s5 is our return register
-	rowMajor:                            # rowMajor(a0, a1, a2)
+	rowMajor:                        # rowMajor(a0, a1, a2)
     	mul $s5, $a0, $s3                # ((X * C
     	add $s5, $s5, $a1                #        + Y)
     	mul $s5, $s5, $s4                #            * D))
@@ -166,7 +167,7 @@ main:
 	    jal rowMajor                 # Generate Addess with parameters(a0, a1, a2)
 	    
 	    lw $a0, ($s5)                # Reg t7 get dm value
-	    li $v0, 1		             # System Call Prints String
+	    li $v0, 1		         # System Call Prints String
 	    syscall
 
 	    la $a0, sp      	         # Print Space
@@ -174,9 +175,9 @@ main:
 	    syscall
     	
         addi $s7, $s7, 1	         # Restore X iterator
-        addi $s6, $s6, 1             # Y++
+        addi $s6, $s6, 1                 # Y++
     	
-        j yLoop		         # Loop
+        j yLoop		                 # Loop
         									    												   									    											 							
 	EXIT:	
 	    li $v0, 10	                 #System Call to End Program
